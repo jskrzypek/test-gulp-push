@@ -7,11 +7,13 @@ var argv = require('yargs').argv;
 var marked = require('marked');
 var fs = require('fs');
 var q = require('q');
-var pkg = require('../../package.json');
+// var pkg = require('../../package.json');
 var path = require('path');
 var gutil = require('gulp-util');
 var exec = $.exec;
 var concat = $.concat;
+var helper = require('../common/helper');
+
 var constants = require('../common/constants')();
 
 var repository = constants.repository;
@@ -20,12 +22,14 @@ if(repository.length <= 0) {
 }
 
 var makeChangelog = function(options) {
+    var pkg = helper.readJsonFile('./package.json');
     var codename = pkg.codename;
     var file = options.standalone ? '' : path.join(__dirname, 'CHANGELOG.md');
     var subtitle = options.subtitle || '"' + codename + '"';
     var from = options.from;
     var version = options.version || pkg.version;
     var deferred = q.defer();
+
     changelog({
         repository: repository,
         version: version,
@@ -58,6 +62,7 @@ gulp.task('changelog:conventional', false, function(cb) {
 });
 
 gulp.task('changelog:script', false, function(cb) {
+    var pkg = helper.readJsonFile('./package.json');
     var options = argv;
     var version = options.version || pkg.version;
     var from = options.from || '';
@@ -65,6 +70,8 @@ gulp.task('changelog:script', false, function(cb) {
     var stream = streamqueue({
         objectMode: true
     });
+
+    console.log('Changelog ' + version);
 
     stream.queue(gulp.src('').pipe(exec('node ./gulp_tasks/common/changelog-script.js ' + version + ' ' + from, {
         pipeStdout: true

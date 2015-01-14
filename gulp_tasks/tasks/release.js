@@ -20,24 +20,9 @@ var runSequence = require('run-sequence').use(gulp);
 var es = require('event-stream');
 var vinylPaths = require('vinyl-paths');
 var del = require('del');
+var helper = require('../common/helper');
 
 var constants = require('../common/constants')();
-
-var readTextFile = function(filename) {
-    var body = fs.readFileSync(filename, 'utf8');
-    return body;
-};
-
-var readJsonFile = function(filename) {
-    var body = readTextFile(filename);
-    return JSON.parse(stripJsonComments(body));
-};
-
-var filterFiles = function(files, extension) {
-    return _.filter(files, function(file) {
-        return path.extname(file) === extension;
-    });
-};
 
 /**
  * Bumps any version in the constants.versionFiles
@@ -66,8 +51,8 @@ gulp.task('bump', false, function() {
     bumpType = process.env.BUMP || bumpType;
 
     var version;
-    var srcjson = filterFiles(constants.versionFiles, '.json');
-    var srcxml = filterFiles(constants.versionFiles, '.xml');
+    var srcjson = helper.filterFiles(constants.versionFiles, '.json');
+    var srcxml = helper.filterFiles(constants.versionFiles, '.xml');
 
     // preparing the queue for bumping json and then xml files
     var stream = streamqueue({
@@ -104,7 +89,7 @@ gulp.task('bump', false, function() {
 });
 
 gulp.task('commit', false, ['bump'], function() {
-    var pkg = readJsonFile('./package.json');
+    var pkg = helper.readJsonFile('./package.json');
     var message = 'docs(changelog): version ' + pkg.version;
     return gulp.src(constants.versionFiles)
         .pipe(git.add({
@@ -114,7 +99,7 @@ gulp.task('commit', false, ['bump'], function() {
 });
 
 gulp.task('tag', false, ['commit'], function() {
-    var pkg = readJsonFile('./package.json');
+    var pkg = helper.readJsonFile('./package.json');
     var v = 'v' + pkg.version;
     var message = pkg.version;
     git.tag(v, message, function(err) {
@@ -141,7 +126,7 @@ gulp.task('push', false, ['tag'], function(cb) {
 
 gulp.task('release', 'Publish a new release version.', ['push']);
 
-gulp.task('release:createRelease', false, ['push', 'changelog:script'], function(cb) {
+gulp.task('release:createRelease', false, ['push'], function(cb) {
 
     var github = new GitHubApi({
         // required
@@ -162,7 +147,7 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
         });
     }
 
-    var pkg = readJsonFile('./package.json');
+    var pkg = helper.readJsonFile('./package.json');
     var v = 'v' + pkg.version;
     var message = pkg.version;
 
@@ -196,29 +181,31 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
         //.pipe(gulpif(success, vinylPaths(del)));
 });
 
-gulp.task('changelog:testFmt', ['changelog:script'], function() {
-    var pkg = readJsonFile('./package.json');
-    var v = 'v' + pkg.version;
-    var message = pkg.version;
+// gulp.task('changelog:testFmt', ['changelog:script'], function() {
+//     var pkg = helper.readJsonFile('./package.json');
+//     var v = 'v' + pkg.version;
+//     var message = pkg.version;
 
-    var ownerRepo = constants.repository.split('/').slice(-2);
+//     var ownerRepo = constants.repository.split('/').slice(-2);
 
-    // var success = false;
+//     // var success = false;
 
-    return gulp.src('CHANGELOG.md')
-        .pipe(tap(function(file) {
-            var body = file.contents.toString();
-            body = body.slice(body.indexOf('###'));
-            console.log('body: ', body);
-            var msg = {
-                owner: ownerRepo[0],
-                repo: ownerRepo[1],
-                tag_name: v,
-                name: v + ': version ' + message,
-                body: body
-            };
-            console.log('msg: ', msg);
-        }));
+//     return gulp.src('CHANGELOG.md')
+//         .pipe(tap(function(file) {
+//             var body = file.contents.toString();
+//             body = body.slice(body.indexOf('###'));
+//             console.log('body: ', body);
+//             var msg = {
+//                 owner: ownerRepo[0],
+//                 repo: ownerRepo[1],
+//                 tag_name: v,
+//                 name: v + ': version ' + message,
+//                 body: body
+//             };
+//             console.log('msg: ', msg);
+//         }));
+// });
+
+gulp.task('release:full', 'Publish a new release version.', function() {
+    return runSequence('changelog', 'release:createRelease');
 });
-
-gulp.task('release:full', 'Publish a new release version.', ['release:createRelease']);
