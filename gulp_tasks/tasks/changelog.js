@@ -71,7 +71,7 @@ gulp.task('changelog:script', false, function(cb) {
     })));
     stream.queue(gulp.src('CHANGELOG.md'));
 
-    return stream.done()
+    stream.done()
         .pipe(concat('CHANGELOG.md'))
         .pipe(gulp.dest('./'))
         .on('end', cb);
