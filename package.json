@@ -1,11 +1,15 @@
 {
   "name": "testgulppush",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "test": "gulp test",
     "postinstall": "node ./bin/protractor-fix-version.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "del": "^1.1.1",
+    "github": "^0.2.3",
+    "vinyl-paths": "^1.0.0"
+  },
   "devDependencies": {
     "brfs": "1.2.0",
     "browser-sync": "1.7.2",
