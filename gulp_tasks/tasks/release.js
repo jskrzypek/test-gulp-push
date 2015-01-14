@@ -168,7 +168,7 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
 
     var ownerRepo = constants.repository.split('/').slice(-2);
 
-    var success;
+    // var success = false;
 
     return gulp.src('CHANGELOG.md')
         .pipe(tap(function(file) {
@@ -183,14 +183,15 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
             };
             github.releases.createRelease(msg, function(err, res) {
                 if(err) {
-                    gutil.log(err);
+                    gutil.log('Error:' + err);
                 } else {
-                    gutil.log(res);
-                    success = true;
+                    gutil.log('Response: "' + res.meta.status + '": ' + res.url);
+                    // success = true;
+                    del('CHANGELOG.md');
                 }
             });
-        }))
-        .pipe(gulpif(success, vinylPaths(del)));
+        }));
+        //.pipe(gulpif(success, vinylPaths(del)));
 });
 
 gulp.task('release:full', 'Publish a new release version.', ['release:createRelease']);
