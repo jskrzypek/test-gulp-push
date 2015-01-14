@@ -189,7 +189,7 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
                 } else {
                     gutil.log('Response: "' + res.meta.status + '": ' + res.url);
                     // success = true;
-                    // del('CHANGELOG.md');
+                    del('CHANGELOG.md');
                 }
             });
         }));
