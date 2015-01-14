@@ -174,6 +174,7 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
         .pipe(tap(function(file) {
             var body = file.contents.toString();
             body = body.slice(body.indexOf('###'));
+            console.log('body: ', body);
             var msg = {
                 owner: ownerRepo[0],
                 repo: ownerRepo[1],
@@ -181,17 +182,43 @@ gulp.task('release:createRelease', false, ['push', 'changelog:script'], function
                 name: v + ': version ' + message,
                 body: body
             };
+            console.log('msg: ', msg);
             github.releases.createRelease(msg, function(err, res) {
                 if(err) {
                     gutil.log('Error:' + err);
                 } else {
                     gutil.log('Response: "' + res.meta.status + '": ' + res.url);
                     // success = true;
-                    del('CHANGELOG.md');
+                    // del('CHANGELOG.md');
                 }
             });
         }));
         //.pipe(gulpif(success, vinylPaths(del)));
+});
+
+gulp.task('changelog:testFmt', ['changelog:script'], function() {
+    var pkg = readJsonFile('./package.json');
+    var v = 'v' + pkg.version;
+    var message = pkg.version;
+
+    var ownerRepo = constants.repository.split('/').slice(-2);
+
+    // var success = false;
+
+    return gulp.src('CHANGELOG.md')
+        .pipe(tap(function(file) {
+            var body = file.contents.toString();
+            body = body.slice(body.indexOf('###'));
+            console.log('body: ', body);
+            var msg = {
+                owner: ownerRepo[0],
+                repo: ownerRepo[1],
+                tag_name: v,
+                name: v + ': version ' + message,
+                body: body
+            };
+            console.log('msg: ', msg);
+        }));
 });
 
 gulp.task('release:full', 'Publish a new release version.', ['release:createRelease']);
