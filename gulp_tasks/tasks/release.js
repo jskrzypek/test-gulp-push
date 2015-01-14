@@ -13,8 +13,14 @@ var tap = $.tap;
 var XML = require('node-jsxml').XML;
 var streamqueue = require('streamqueue');
 var git = $.git;
-var gulpif = $.
-if;
+var gulpif = $.if;
+var gutil = require('gulp-util');
+var GitHubApi = require('github');
+var runSequence = require('run-sequence').use(gulp);
+var es = require('event-stream');
+var vinylPaths = require('vinyl-paths');
+var del = require('del');
+
 var constants = require('../common/constants')();
 
 var readTextFile = function(filename) {
@@ -118,11 +124,12 @@ gulp.task('tag', false, ['commit'], function() {
     });
 });
 
-gulp.task('push', false, ['tag'], function() {
+gulp.task('push', false, ['tag'], function(cb) {
     exec('git push origin master  && git push origin master --tags', function(err) {
         if(err) {
             throw new Error(err);
         }
+        cb();
     });
 });
 
@@ -133,3 +140,57 @@ gulp.task('push', false, ['tag'], function() {
 // });
 
 gulp.task('release', 'Publish a new release version.', ['push']);
+
+gulp.task('release:createRelease', false, ['push', 'changelog:script'], function(cb) {
+
+    var github = new GitHubApi({
+        // required
+        version: '3.0.0',
+        // optional
+        debug: true,
+        protocol: 'https',
+        timeout: 5000
+    });
+
+    if(args.username && args.password) {
+        var username = args.username;
+        var password = args.password;
+        github.authenticate({
+            type: 'basic',
+            username: username,
+            password: password
+        });
+    }
+
+    var pkg = readJsonFile('./package.json');
+    var v = 'v' + pkg.version;
+    var message = pkg.version;
+
+    var ownerRepo = constants.repository.split('/').slice(-2);
+
+    var success;
+
+    return gulp.src('CHANGELOG.md')
+        .pipe(tap(function(file) {
+            var body = file.contents.toString();
+            body = body.slice(body.indexOf('###'));
+            var msg = {
+                owner: ownerRepo[0],
+                repo: ownerRepo[1],
+                tag_name: v,
+                name: v + ': version ' + message,
+                body: body
+            };
+            github.releases.createRelease(msg, function(err, res) {
+                if(err) {
+                    gutil.log(err);
+                } else {
+                    gutil.log(res);
+                    success = true;
+                }
+            });
+        }))
+        .pipe(gulpif(success, vinylPaths(del)));
+});
+
+gulp.task('release:full', 'Publish a new release version.', ['release:createRelease']);

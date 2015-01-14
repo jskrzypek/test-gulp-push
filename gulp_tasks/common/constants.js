@@ -15,7 +15,7 @@ module.exports = function() {
         mode: '{{mode}}',
         clientFolder: clientFolder,
         repository: 'https://github.com/jskrzypek/test-gulp-push',
-        versionFiles: ['./package.json', './bower.json', './' + clientFolder + '/config*.xml'],
+        versionFiles: ['./package.json', './bower.json'],
         growly: {
             notify: false,
             successIcon: path.join(cwd, 'node_modules/karma-growl-reporter/images/success.png'),
