@@ -1,6 +1,6 @@
 {
   "name": "testgulppush",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "scripts": {
     "test": "gulp test",
     "postinstall": "node ./bin/protractor-fix-version.js"
