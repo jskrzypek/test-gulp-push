@@ -1,0 +1,11 @@
+{
+  "generator-angular-famous-ionic": {
+    "appname": "testGulpPush",
+    "clientFolder": "client",
+    "ionic": false,
+    "famous": false,
+    "ngCordova": false,
+    "fontawesome": false,
+    "bootstrap": false
+  }
+}
