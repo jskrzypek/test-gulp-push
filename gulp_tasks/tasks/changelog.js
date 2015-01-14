@@ -43,7 +43,7 @@ var makeChangelog = function(options) {
     return deferred.promise;
 };
 
-gulp.task('changelog:conventional', false, function() {
+gulp.task('changelog:conventional', false, function(cb) {
     var dest = argv.dest || 'CHANGELOG.md';
     var toHtml = argv.html || false;
     return makeChangelog(argv).then(function(log) {
@@ -53,10 +53,11 @@ gulp.task('changelog:conventional', false, function() {
             });
         }
         fs.writeFileSync(dest, log);
+        cb();
     });
 });
 
-gulp.task('changelog:script', false, function() {
+gulp.task('changelog:script', false, function(cb) {
     var options = argv;
     var version = options.version || pkg.version;
     var from = options.from || '';
@@ -72,7 +73,8 @@ gulp.task('changelog:script', false, function() {
 
     return stream.done()
         .pipe(concat('CHANGELOG.md'))
-        .pipe(gulp.dest('./'));
+        .pipe(gulp.dest('./'))
+        .on('end', cb);
 });
 
 gulp.task('changelog', 'Generates a CHANGELOG.md file.', ['changelog:script']);
